@@ -22,6 +22,11 @@ Zero-runtime CSS in JS library.
 
 [![tweet][tweet-badge]][tweet]
 
+## `twstyled` fork (February 2021)
+
+- [x] Adds `importMap` option to tell `@linaria/babel-preset` what imports it should look at to determine what it should transform so if you re-export Linaria's exports, you can still use the Babel transform
+- [x] Adds `templateProcessor` option to allow for custom tagged template string processors, and opens API for existing template processor to be used as such a custom processor with an optional CSS text processor included 
+
 ## Features
 
 - Write CSS in JS, but with **zero runtime**, CSS is extracted to CSS files during build

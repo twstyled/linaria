@@ -8,10 +8,12 @@ import generator from '@babel/generator';
 
 import type { StyledMeta } from '@linaria/core';
 import { debug } from '@linaria/logger';
+import type { Scope } from '@babel/traverse';
 import { units } from '../units';
 import type {
   State,
   StrictOptions,
+  TemplateCssProcessor,
   TemplateExpression,
   ValueCache,
 } from '../types';
@@ -29,6 +31,7 @@ const unitRegex = new RegExp(`^(${units.join('|')})(;|,|\n| |\\))`);
 type Interpolation = {
   id: string;
   node: Expression;
+  scope: Scope;
   source: string;
   unit: string;
 };
@@ -40,11 +43,14 @@ function hasMeta(value: any): value is StyledMeta {
 const processedPaths = new WeakSet();
 
 export default function getTemplateProcessor(
-  { types: t }: Core,
-  options: StrictOptions
+  babel: Core,
+  options: StrictOptions,
+  processCssText?: TemplateCssProcessor
 ) {
+  const { types: t } = babel;
   return function process(
     { styled, path }: TemplateExpression,
+    index: number,
     state: State,
     valueCache: ValueCache
   ) {
@@ -64,7 +70,7 @@ export default function getTemplateProcessor(
     // Only works when it's assigned to a variable
     let isReferenced = true;
 
-    const [slug, displayName, className] = getLinariaComment(path);
+    let [slug, displayName, className] = getLinariaComment(path);
 
     const parent = path.findParent(
       (p) =>
@@ -192,6 +198,7 @@ export default function getTemplateProcessor(
             interpolations.push({
               id,
               node: ex.node,
+              scope: ex.scope,
               source: ex.getSource() || generator(ex.node).code,
               unit: '',
             });
@@ -273,6 +280,29 @@ export default function getTemplateProcessor(
         );
       }
 
+      if (processCssText) {
+        const { cssText: newCssText, className: newClassName } = processCssText(
+          state,
+          index,
+          {
+            className: className!,
+            cssText,
+            interpolations,
+            isReferenced,
+            props,
+            start: path.parent?.loc?.start ?? null,
+            selector,
+          }
+        );
+        cssText = newCssText;
+        className = newClassName;
+
+        props[1] = t.objectProperty(
+          t.identifier('class'),
+          t.stringLiteral(newClassName)
+        );
+      }
+
       path.replaceWith(
         t.callExpression(
           t.callExpression(
@@ -285,6 +315,24 @@ export default function getTemplateProcessor(
 
       path.addComment('leading', '#__PURE__');
     } else {
+      if (processCssText) {
+        const { cssText: newCssText, className: newClassName } = processCssText(
+          state,
+          index,
+          {
+            className: className!,
+            cssText,
+            interpolations,
+            isReferenced,
+            props: undefined,
+            start: path.parent?.loc?.start ?? null,
+            selector,
+          }
+        );
+        cssText = newCssText;
+        className = newClassName;
+      }
+
       path.replaceWith(t.stringLiteral(className!));
     }
 

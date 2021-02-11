@@ -5,20 +5,33 @@
 
 import type { ImportDeclaration } from '@babel/types';
 import type { NodePath } from '@babel/traverse';
-import type { State } from '../types';
+import type { State, StrictOptions } from '../types';
 import { Core } from '../babel';
+
+const styledLibs = ['@linaria/react', 'linaria/react'];
 
 export default function DetectStyledImportName(
   { types: t }: Core,
   path: NodePath<ImportDeclaration>,
-  state: State
+  state: State,
+  options: StrictOptions
 ) {
-  if (!t.isLiteral(path.node.source, { value: '@linaria/react' })) {
+  const sources = options.importMap?.styled || styledLibs;
+
+  if (
+    !(
+      t.isLiteral(path.node.source) &&
+      sources.indexOf(path.node.source.value) !== -1
+    )
+  ) {
     return;
   }
 
   path.node.specifiers.forEach((specifier) => {
-    if (!t.isImportSpecifier(specifier)) {
+    if (
+      !t.isImportSpecifier(specifier) ||
+      specifier.imported.name !== 'styled'
+    ) {
       return;
     }
     if (specifier.local.name !== specifier.imported.name) {

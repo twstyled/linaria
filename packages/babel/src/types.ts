@@ -5,7 +5,8 @@ import type {
   TaggedTemplateExpression,
 } from '@babel/types';
 import type { TransformOptions } from '@babel/core';
-import type { NodePath } from '@babel/traverse';
+import type { Scope, NodePath } from '@babel/traverse';
+import type { ObjectProperty } from '@babel/types';
 import type { VisitorKeys } from '@babel/types';
 import type { StyledMeta } from '@linaria/core';
 import type { RawSourceMap } from 'source-map';
@@ -128,6 +129,12 @@ export type StrictOptions = {
   ignore?: RegExp;
   babelOptions: TransformOptions;
   rules: EvalRule[];
+  importMap?: {
+    css: Array<string>;
+    styled: Array<string>;
+    [key: string]: Array<string>;
+  };
+  templateProcessor: TemplateProcessor;
 };
 
 export type Location = {
@@ -168,6 +175,33 @@ export type PreprocessorFn = (selector: string, cssText: string) => string;
 export type Preprocessor = 'none' | 'stylis' | PreprocessorFn | void;
 
 type AllNodes = { [T in Node['type']]: Extract<Node, { type: T }> };
+
+export type TemplateProcessor = (
+  { styled, path }: TemplateExpression,
+  index: number,
+  state: State,
+  valueCache: ValueCache
+) => void;
+
+export type TemplateCssProcessor = (
+  state: State,
+  index: number,
+  item: {
+    interpolations: {
+      id: string;
+      node: Expression;
+      scope: Scope;
+      source: string;
+      unit: string;
+    }[];
+    start: { line: number; column: number } | null;
+    selector: string;
+    className: string;
+    cssText: string;
+    isReferenced: boolean;
+    props?: ObjectProperty[];
+  }
+) => { cssText: string; className: string };
 
 declare module '@babel/types' {
   type VisitorKeys = {

@@ -29,7 +29,8 @@ function index(babel: Core, options: StrictOptions) {
           // We need our transforms to run before anything else
           // So we traverse here instead of a in a visitor
           path.traverse({
-            ImportDeclaration: (p) => DetectStyledImportName(babel, p, state),
+            ImportDeclaration: (p) =>
+              DetectStyledImportName(babel, p, state, options),
             TaggedTemplateExpression: (p) =>
               GenerateClassNames(babel, p, state, options),
             JSXElement,

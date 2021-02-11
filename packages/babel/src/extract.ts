@@ -24,6 +24,7 @@ import type {
   LazyValue,
   ExpressionValue,
   ValueCache,
+  TemplateProcessor,
 } from './types';
 import { ValueType } from './types';
 import CollectDependencies from './visitors/CollectDependencies';
@@ -108,7 +109,8 @@ export default function extract(
   babel: Core,
   options: StrictOptions
 ): { visitor: Visitor<State> } {
-  const process = getTemplateProcessor(babel, options);
+  const process: TemplateProcessor =
+    options.templateProcessor || getTemplateProcessor(babel, options);
 
   return {
     visitor: {
@@ -128,7 +130,8 @@ export default function extract(
           // We need our transforms to run before anything else
           // So we traverse here instead of a in a visitor
           path.traverse({
-            ImportDeclaration: (p) => DetectStyledImportName(babel, p, state),
+            ImportDeclaration: (p) =>
+              DetectStyledImportName(babel, p, state, options),
             TaggedTemplateExpression: (p) => {
               GenerateClassNames(babel, p, state, options);
               CollectDependencies(babel, p, state, options);
@@ -198,7 +201,9 @@ export default function extract(
           originalLazyExpressions.forEach((key, idx) =>
             valueCache.set(key, lazyValues[idx])
           );
-          state.queue.forEach((item) => process(item, state, valueCache));
+          state.queue.forEach((item, index) =>
+            process(item, index, state, valueCache)
+          );
         },
         exit(_: any, state: State) {
           if (Object.keys(state.rules).length) {

@@ -1,12 +1,9 @@
 import { dirname } from 'path';
 import Module from '../module';
+import type { StrictOptions } from '../types';
 
-const linariaLibs = new Set([
-  '@linaria/core',
-  '@linaria/react',
-  'linaria',
-  'linaria/react',
-]);
+const cssLibs = ['@linaria/core', 'linaria'];
+const styledLibs = ['@linaria/react', 'linaria/react'];
 
 // Verify if the binding is imported from the specified source
 export default function hasImport(
@@ -14,8 +11,18 @@ export default function hasImport(
   scope: any,
   filename: string,
   identifier: string,
-  sources: string[]
+  options: StrictOptions
 ): boolean {
+  const sources =
+    identifier === 'css'
+      ? options.importMap?.css || cssLibs
+      : options.importMap?.styled || styledLibs;
+
+  const linariaLibs = new Set([
+    ...(options.importMap?.css || cssLibs),
+    ...(options.importMap?.styled || styledLibs),
+  ]);
+
   const binding = scope.getAllBindings()[identifier];
 
   if (!binding) {

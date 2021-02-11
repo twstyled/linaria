@@ -23,7 +23,7 @@ export default function GenerateClassNames(
   options: StrictOptions
 ) {
   const { types: t } = babel;
-  const styledOrCss = isStyledOrCss(babel, path, state);
+  const styledOrCss = isStyledOrCss(babel, path, state, options);
   if (!styledOrCss) {
     return;
   }

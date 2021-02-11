@@ -81,6 +81,38 @@ module.exports = {
 
   If you need to specify custom babel configuration, you can pass them here. These babel options will be used by Linaria when parsing and evaluating modules.
 
+- `importMap: Object`
+
+  This option allows you to tell `@linaria/babel-preset` what imports it should look at to determine what it should transform so if you re-export Linaria's exports, you can still use the Babel transforms
+
+  An example config:
+
+```json
+{
+  "importMap": {
+      "styled": ['mystyledpackage', '@linaria/react', 'linaria/react'],
+       "css": ['mycsspackage', '@linaria/core', 'linaria']
+    }
+}
+```
+s
+```js
+import { styled } from 'mystyledpackage';
+import { css } from 'mycsspackage';
+```
+
+- `templateProcessor: Function`
+
+  This option allows you to tell `@linaria/babel-preset` to use a custom tagged template processor instead of the 
+  default.  The default option is the template processor returned by `getTemplateProcessor` in the `evaluators/templateProcessor.ts` file, with no optional `processCssText` hook set
+
+### `processCssText` hook
+
+The `processCssText` hook is a way to customize the tagged templated processor in `@linaria/babel-preset`.  If you 
+want to do some custom processing of the css text generated for each css or styled template string, for example
+by running it through `stylis` directly in the Babel preset instead of in the containing bundler, you can include 
+this here.  One example use case is supporting custom css extensions (e.g., Tailwind CSS) that need to be directly added to the class names generated.
+
 ## `@linaria/babel-preset`
 
 The preset pre-processes and evaluates the CSS. The bundler plugins use this preset under the hood. You also might want to use this preset if you import the components outside of the files handled by your bundler, such as on your server or in unit tests.

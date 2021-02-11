@@ -8,9 +8,12 @@ import type { ConfigAPI, TransformCaller } from '@babel/core';
 import { debug } from '@linaria/logger';
 import type { PluginOptions } from './utils/loadOptions';
 import loadOptions from './utils/loadOptions';
+import plugin from './extract';
 
 export * as EvalCache from './eval-cache';
+export { plugin };
 export { default as buildOptions } from './evaluators/buildOptions';
+export { default as getTemplateProcessor } from './evaluators/templateProcessor';
 export { default as JSXElement } from './evaluators/visitors/JSXElement';
 export { default as ProcessCSS } from './evaluators/visitors/ProcessCSS';
 export { default as ProcessStyled } from './evaluators/visitors/ProcessStyled';
@@ -36,6 +39,6 @@ export default function linaria(babel: ConfigAPI, options: PluginOptions) {
   }
   debug('options', JSON.stringify(options));
   return {
-    plugins: [[require('./extract'), loadOptions(options)]],
+    plugins: [[plugin, loadOptions(options)]],
   };
 }
